@@ -3,11 +3,10 @@ import 'css_loader.dart';
 import 'constants.dart';
 
 class XFrameOptionsBypass {
-  static String build({
-    CssLoader cssloader = const CssLoader(),
-    bool printDebugInfo = false,
-    String id = 'iframe'
-  }) {
+  static String build(
+      {CssLoader cssloader = const CssLoader(),
+      bool printDebugInfo = false,
+      String id = 'iframe'}) {
     final checkIfCustomElementIsDefined = () {
       return '''
       if (customElements.get('x-frame-bypass') == undefined) {
@@ -88,7 +87,6 @@ class XFrameOptionsBypass {
                     var height = calcPageHeight(frameElement.contentWindow.document);
                     console.log('height:' +height + frameElement);
                     if (frameElement ) {
-                      frameElement.height = height;
                       sendMessage({'contentHeight':height});
                     }
                   });
