@@ -82,6 +82,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   @override
   void initState() {
     super.initState();
+    contentHeight = widget.height ?? 100;
     webViewXController = _createWebViewXController();
   }
 
@@ -131,12 +132,12 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
         onLoadStop: onWebViewFinished,
         onLoadError: (controller, url, code, message) {
           widget.onWebResourceError?.call(
-              WebResourceError(
-                description: message,
-                errorCode: code,
-                failingUrl: url.toString(),
-              ),
-            );
+            WebResourceError(
+              description: message,
+              errorCode: code,
+              failingUrl: url.toString(),
+            ),
+          );
         },
       ),
     );
@@ -146,16 +147,15 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   HtmlController _createWebViewXController() {
     return HtmlController(
       src: widget.src,
-    )
-      ..addListener(_handleChange);
+    )..addListener(_handleChange);
   }
 
   // Called when WebViewXController updates it's value
   void _handleChange() {
     final url = webViewXController.value;
-    originalWebViewController.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
+    originalWebViewController.loadUrl(
+        urlRequest: URLRequest(url: Uri.parse(url)));
   }
-
 
   @override
   void dispose() {

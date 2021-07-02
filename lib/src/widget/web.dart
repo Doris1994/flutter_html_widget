@@ -75,7 +75,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   late html.Element element;
 
   late HtmlController controller;
-  double contentHeight = 100;
+  double contentHeight = 0;
 
   // Pseudo state used to find out if the current iframe
   // has started or finished loading.
@@ -88,6 +88,8 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
     super.initState();
     // Initialize to true, because it will start loading once it is created
     _pageLoadFinished = false;
+
+    contentHeight = widget.height ?? 100;
 
     controller = _createWebViewXController();
 
@@ -112,9 +114,11 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
             if (data.containsKey('contentHeight')) {
               var height = data['contentHeight'];
               print('on message contentHeight: $height');
-              setState(() {
-                contentHeight = height;
-              });
+              if (widget.adaptHeight) {
+                setState(() {
+                  contentHeight = height;
+                });
+              }
             }
           },
         );
@@ -155,7 +159,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   html.IFrameElement _createIFrame() {
     String scroll = widget.adaptHeight ? "no" : "";
     String htmlStr = '''
-      <iframe is="x-frame-bypass" scrolling="no"></iframe>
+      <iframe is="x-frame-bypass" scrolling=$scroll></iframe>
     ''';
     // ignore: unsafe_html
     var xFrameBypassElement = html.Element.html(

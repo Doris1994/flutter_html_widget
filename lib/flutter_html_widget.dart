@@ -53,28 +53,31 @@ class HtmlWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WebViewXWidget(
-      key: key,
-      src: url,
-      width: width ?? MediaQuery.of(context).size.width,
-      height: height ?? MediaQuery.of(context).size.height,
-      adaptHeight: adaptHeight,
-      onWebViewCreated: onWebViewCreated,
-      onPageStarted: onPageStarted,
-      onPageFinished: onPageFinished,
-      onWebResourceError: onWebResourceError,
-      webSpecificParams: WebSpecificParams(),
-      mobileSpecificParams: MobileSpecificParams(
-        gestureNavigationEnabled: true,
-        mobileGestureRecognizers: adaptHeight
-            ? null
-            : (Set()
-              ..add(
-                Factory<VerticalDragGestureRecognizer>(
-                  () => VerticalDragGestureRecognizer(),
-                ),
-              )),
-      ),
-    );
+    return LayoutBuilder(
+        builder: (BuildContext buildContext, BoxConstraints constraints) {
+      return WebViewXWidget(
+        key: key,
+        src: url,
+        width: width ?? constraints.maxWidth,
+        height: height ?? constraints.maxHeight,
+        adaptHeight: adaptHeight,
+        onWebViewCreated: onWebViewCreated,
+        onPageStarted: onPageStarted,
+        onPageFinished: onPageFinished,
+        onWebResourceError: onWebResourceError,
+        webSpecificParams: WebSpecificParams(),
+        mobileSpecificParams: MobileSpecificParams(
+          gestureNavigationEnabled: true,
+          mobileGestureRecognizers: adaptHeight
+              ? null
+              : (Set()
+                ..add(
+                  Factory<VerticalDragGestureRecognizer>(
+                    () => VerticalDragGestureRecognizer(),
+                  ),
+                )),
+        ),
+      );
+    });
   }
 }
