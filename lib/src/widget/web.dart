@@ -153,9 +153,13 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   }
 
   html.IFrameElement _createIFrame() {
+    String scroll = widget.adaptHeight ? "no" : "";
+    String htmlStr = '''
+      <iframe is="x-frame-bypass" scrolling="no"></iframe>
+    ''';
     // ignore: unsafe_html
     var xFrameBypassElement = html.Element.html(
-      '<iframe is="x-frame-bypass"></iframe>',
+      htmlStr,
       validator: null,
       treeSanitizer: html.NodeTreeSanitizer.trusted,
     ) as html.IFrameElement;
@@ -169,6 +173,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
       ..style.bottom = "0px"
       ..style.left = "0px"
       ..style.right = "0px"
+      ..style.overflow = "hidden"
       ..width = '100%'
       ..height = '100%'
       ..allowFullscreen = widget.webSpecificParams.webAllowFullscreenContent;
@@ -266,16 +271,11 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   Widget build(BuildContext context) {
     return AbsorbPointer(
       child: SizedBox(
-          width: widget.width,
           height: contentHeight,
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              return HtmlElementView(
-                key: widget.key,
-                viewType: elementViewType,
-              );
-            },)
-          ),
+          child: HtmlElementView(
+            key: widget.key,
+            viewType: elementViewType,
+          )),
     );
   }
 
