@@ -69,6 +69,7 @@ class WebViewXWidget extends StatefulWidget {
 class _WebViewXWidgetState extends State<WebViewXWidget> {
   late String elementViewType;
   late StreamSubscription iframeOnLoadSubscription;
+  late StreamSubscription messageSubscription;
   late js.JsObject jsWindowObject;
 
   late html.Element element;
@@ -105,7 +106,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
     ui.platformViewRegistry.registerViewFactory(
       elementViewType,
       (int id) {
-        html.window.onMessage.listen(
+        messageSubscription = html.window.onMessage.listen(
           (event) {
             final Map<String, dynamic> data = jsonDecode(event.data);
             if (data.containsKey('contentHeight')) {
@@ -332,6 +333,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   @override
   void dispose() {
     iframeOnLoadSubscription.cancel();
+    messageSubscription.cancel();
     controller.removeListener(_handleChange);
     super.dispose();
   }
