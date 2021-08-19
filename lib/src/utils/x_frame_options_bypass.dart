@@ -83,6 +83,9 @@ class XFrameOptionsBypass {
                     return height;
                   }
 
+                  frameElement.contentWindow.document.addEventListener( "DOMContentLoaded", function () {
+                    sendMessage({'pageFinished':'true'})
+                  }, false);
                   window.addEventListener('load', function () {
                     var height = calcPageHeight(frameElement.contentWindow.document);
                     console.log('height:' +height + frameElement);
@@ -97,9 +100,7 @@ class XFrameOptionsBypass {
                   document.addEventListener('click', e => {
                     if (frameElement && document.activeElement && document.activeElement.href) {
                       e.preventDefault()
-                      frameElement.contentWindow.$WEB_HISTORY_CALLBACK && frameElement.contentWindow.$WEB_HISTORY_CALLBACK(document.activeElement.href)
-
-                      frameElement.load(document.activeElement.href)
+                      sendMessage({'shouldOverrideUrl':document.activeElement.href});
                     }
                   })
                   document.addEventListener('submit', e => {

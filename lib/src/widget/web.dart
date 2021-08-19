@@ -97,20 +97,8 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
     ui.platformViewRegistry.registerViewFactory(
       elementViewType,
       (int id) {
-        messageSubscription = html.window.onMessage.listen(
-          (event) {
-            final Map<String, dynamic> data = jsonDecode(event.data);
-            if (data.containsKey('contentHeight')) {
-              var height = data['contentHeight'];
-              print('on message contentHeight: $height');
-              if (widget.adaptHeight) {
-                setState(() {
-                  contentHeight = height;
-                });
-              }
-            }
-          },
-        );
+        messageSubscription =
+            html.window.onMessage.listen(onWindowMessageHandler);
         return element;
       },
     );
@@ -125,12 +113,35 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
     // });
   }
 
+  void onWindowMessageHandler(event) {
+    final Map<String, dynamic> data = jsonDecode(event.data);
+    if (data.containsKey('contentHeight')) {
+      var height = data['contentHeight'];
+      print('on message contentHeight: $height');
+      if (widget.adaptHeight) {
+        setState(() {
+          contentHeight = height;
+        });
+      }
+      _delegate?.onPageFinished(controller.value);
+    } else if (data.containsKey('pageFinished')) {
+      _delegate?.onPageFinished(controller.value);
+    } else if (data.containsKey('shouldOverrideUrl')) {
+      //重定向
+      var url = data['shouldOverrideUrl'];
+      bool needLoad = _delegate?.shouldOverrideUrlLoading(url) ?? true;
+      if (needLoad) {
+        controller.load(url, headers: _delegate?.headers ?? const {});
+      }
+    }
+  }
+
   void _addXFrameElement() {
     var head = html.document.head!;
 
     var script = html.ScriptElement()
       ..text = XFrameOptionsBypass.build(
-          //cssloader: widget.webSpecificParams.cssLoadingIndicator,
+          cssloader: CssLoader(style: ''),
           printDebugInfo: widget.webSpecificParams.printDebugInfo,
           id: element.id);
 
