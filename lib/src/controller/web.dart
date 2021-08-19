@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:js' as js;
 
 import 'dart:async' show Future;
-import 'package:flutter/services.dart' show rootBundle;
-import '../utils/utils.dart';
 import '../utils/web_history.dart';
 
 /// Web implementation
@@ -20,33 +18,23 @@ class HtmlController extends ValueNotifier<String> {
   bool printDebugInfo = false;
 
   /// Constructor
-  HtmlController({
-    required String src
-  })  :_history = HistoryStack(
-          initialEntry: HistoryEntry(
-            source: src
-          ),
-        ), super(src){
-          value = src;
-          //invokeJavascript = (_) async{};
-        }
+  HtmlController({required String src, Map<String, String> headers = const {}})
+      : _history = HistoryStack(
+            initialEntry: HistoryEntry(source: src, headers: headers)),
+        super(src) {
+    //invokeJavascript = (_) async{};
+  }
 
-   void _setContent(String url) {
+  void _setContent(String url) {
     value = url;
   }
 
-  /// Set webview content to the specified URL.
-  /// Example URL: https://flutter.dev
-  ///
-  /// If [fromAssets] param is set to true,
-  /// [url] param must be a String path to an asset
-  /// Example: 'assets/some_url.txt'
-  void loadContent(
-    String content,{
+  void load(
+    String content, {
     Map<String, String> headers = const {},
   }) async {
     _setContent(content);
-    webAddHistory(HistoryEntry(source: content));
+    webAddHistory(HistoryEntry(source: content, headers: headers));
   }
 
   /// This function allows you to call Javascript functions defined inside the webview.
@@ -103,7 +91,6 @@ class HtmlController extends ValueNotifier<String> {
     _history.addEntry(entry);
     _printIfDebug(_history.toString());
   }
-
 
   /// Returns a Future that completes with the value true, if you can go
   /// back in the history stack.

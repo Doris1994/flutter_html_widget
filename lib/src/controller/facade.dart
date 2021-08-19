@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/web_history.dart';
 
 /// Facade controller
 ///
@@ -21,8 +20,8 @@ class HtmlController extends ValueNotifier<String> {
   /// If [fromAssets] param is set to true,
   /// [url] param must be a String path to an asset
   /// Example: 'assets/some_url.txt'
-  void loadContent(
-    String content,{
+  void load(
+    String url,{
     Map<String, String> headers = const {},
   }) async =>
       throw UnimplementedError();

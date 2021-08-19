@@ -68,10 +68,12 @@ class HistoryStack {
 class HistoryEntry {
   /// Source
   final String source;
+  final Map<String, String> headers;
 
   /// Constructor
   HistoryEntry({
     required this.source,
+    this.headers = const {},
   });
 
   @override
@@ -81,8 +83,7 @@ class HistoryEntry {
 
   @override
   bool operator ==(Object other) =>
-      (other is HistoryEntry) &&
-      (other.source == source);
+      (other is HistoryEntry) && (other.source == source);
 
   @override
   int get hashCode => source.hashCode;

@@ -7,9 +7,10 @@ import 'package:flutter/material.dart';
 import '../utils/utils.dart';
 import '../utils/constants.dart';
 import '../utils/web_history.dart';
-import '../controller/web.dart';
+import '../controller/controller.dart';
 import '../utils/dart_ui_fix.dart' as ui;
 import '../utils/x_frame_options_bypass.dart';
+import '../web_view_delegate.dart';
 
 /// Web implementation
 class WebViewXWidget extends StatefulWidget {
@@ -24,18 +25,7 @@ class WebViewXWidget extends StatefulWidget {
   /// Widget height
   final double? height;
 
-  /// Callback which returns a referrence to the [WebViewXController]
-  /// being created.
-  final Function(HtmlController controller)? onWebViewCreated;
-
-  /// Callback for when the page starts loading.
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  final void Function(String src)? onPageFinished;
-
-  /// Callback for when something goes wrong in while page or resources load.
-  final void Function(WebResourceError error)? onWebResourceError;
+  final WebViewDelegate? delegate;
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -54,10 +44,7 @@ class WebViewXWidget extends StatefulWidget {
     this.adaptHeight = false,
     this.width,
     this.height,
-    this.onWebViewCreated,
-    this.onPageStarted,
-    this.onPageFinished,
-    this.onWebResourceError,
+    this.delegate,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   }) : super(key: key);
@@ -67,6 +54,7 @@ class WebViewXWidget extends StatefulWidget {
 }
 
 class _WebViewXWidgetState extends State<WebViewXWidget> {
+  late WebViewDelegate? _delegate;
   late String elementViewType;
   late StreamSubscription iframeOnLoadSubscription;
   late StreamSubscription messageSubscription;
@@ -86,6 +74,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   @override
   void initState() {
     super.initState();
+    _delegate = widget.delegate;
     // Initialize to true, because it will start loading once it is created
     _pageLoadFinished = false;
 
@@ -126,7 +115,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
       },
     );
 
-    widget.onWebViewCreated?.call(controller);
+    _delegate?.onWebViewCreated(controller);
 
     // Hack to allow the iframe to reach the "begin loading" state.
     // Otherwise it will fail loading the initial content.
@@ -141,7 +130,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
 
     var script = html.ScriptElement()
       ..text = XFrameOptionsBypass.build(
-          cssloader: widget.webSpecificParams.cssLoadingIndicator,
+          //cssloader: widget.webSpecificParams.cssLoadingIndicator,
           printDebugInfo: widget.webSpecificParams.printDebugInfo,
           id: element.id);
 
@@ -233,11 +222,11 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
       // Register history callback
       jsWindowObject[WEB_HISTORY_CALLBACK] = (newHref) {
         if (newHref != null) {
-          controller.webAddHistory(
-            HistoryEntry(
-              source: newHref,
-            ),
-          );
+          // controller.webAddHistory(
+          //   HistoryEntry(
+          //     source: newHref,
+          //   ),
+          // );
           _printIfDebug('Got a new history entry');
         }
       };
@@ -257,7 +246,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
 
       if (_pageLoadFinished) {
         // This means it has loaded twice, so it has finished loading
-        widget.onPageFinished?.call(controller.value);
+        _delegate?.onPageFinished(controller.value);
         var height = controller.evalRawJavascript(
             'document.getElementById("${element.id}").contentWindow.document.body.scrollHeight;',
             inGlobalContext: true);
@@ -265,7 +254,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
         _pageLoadFinished = false;
       } else {
         // This means it is the first time it loads
-        widget.onPageStarted?.call(controller.value);
+        _delegate?.onPageStarted(controller.value);
         _pageLoadFinished = true;
       }
     });

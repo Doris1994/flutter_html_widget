@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../controller/controller.dart';
 import '../utils/utils.dart';
+import '../web_view_delegate.dart';
 
 /// Facade widget
 ///
@@ -10,25 +10,15 @@ class WebViewXWidget extends StatefulWidget {
   /// Initial content
   final String src;
 
-  final bool adaptHeight; 
+  final bool adaptHeight;
+
   /// Widget width
   final double? width;
 
   /// Widget height
   final double? height;
 
-  /// Callback which returns a referrence to the [WebViewXController]
-  /// being created.
-  final Function(HtmlController controller)? onWebViewCreated;
-
-  /// Callback for when the page starts loading.
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  final void Function(String src)? onPageFinished;
-
-  /// Callback for when something goes wrong in while page or resources load.
-  final void Function(WebResourceError error)? onWebResourceError;
+  final WebViewDelegate? delegate;
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -47,10 +37,7 @@ class WebViewXWidget extends StatefulWidget {
     this.adaptHeight = false,
     this.width,
     this.height,
-    this.onWebViewCreated,
-    this.onPageStarted,
-    this.onPageFinished,
-    this.onWebResourceError,
+    this.delegate,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   }) : super(key: key);

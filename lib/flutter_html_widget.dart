@@ -4,12 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'src/widget/view.dart';
-import 'src/controller/controller.dart';
+import 'src/web_view_delegate.dart';
 import 'src/utils/utils.dart';
 
+export 'src/utils/webview_flutter_original_utils.dart';
+export 'src/web_view_delegate.dart' show WebViewDelegate;
 export 'src/controller/controller.dart';
-//export 'src/utils/utils.dart';
-//export 'src/widget/view.dart';
 
 class HtmlWidget extends StatelessWidget {
   final String url;
@@ -27,16 +27,7 @@ class HtmlWidget extends StatelessWidget {
   ///
   /// This is ignored on web.
   final Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers;
-  final Function(HtmlController controller)? onWebViewCreated;
-
-  /// Callback for when the page starts loading.
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  final void Function(String src)? onPageFinished;
-
-  /// Callback for when something goes wrong in while page or resources load.
-  final void Function(WebResourceError error)? onWebResourceError;
+  final WebViewDelegate? delegate;
 
   const HtmlWidget(
       {Key? key,
@@ -45,10 +36,7 @@ class HtmlWidget extends StatelessWidget {
       this.gestureRecognizers,
       this.width,
       this.height,
-      this.onWebViewCreated,
-      this.onPageStarted,
-      this.onPageFinished,
-      this.onWebResourceError})
+      this.delegate})
       : super(key: key);
 
   @override
@@ -61,10 +49,7 @@ class HtmlWidget extends StatelessWidget {
         width: width ?? constraints.maxWidth,
         height: height ?? constraints.maxHeight,
         adaptHeight: adaptHeight,
-        onWebViewCreated: onWebViewCreated,
-        onPageStarted: onPageStarted,
-        onPageFinished: onPageFinished,
-        onWebResourceError: onWebResourceError,
+        delegate: delegate,
         webSpecificParams: WebSpecificParams(),
         mobileSpecificParams: MobileSpecificParams(
           gestureNavigationEnabled: true,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async' show Future, FutureOr;
-import 'package:flutter/services.dart' show rootBundle;
+import 'dart:async' show Future;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../utils/utils.dart';
 
@@ -9,27 +8,19 @@ class HtmlController extends ValueNotifier<String> {
   /// Webview controller connector
   late InAppWebViewController connector;
 
-  /// Constructor
-    HtmlController({
-    required String src
-  })   : super(src);
+  HtmlController({required String src}) : super(src);
 
   void _setContent(String url) {
-    value = url;
+    super.value = url;
   }
 
-  /// Set webview content to the specified URL.
-  /// Example URL: https://flutter.dev
-  ///
-  /// If [fromAssets] param is set to true,
-  /// [url] param must be a String path to an asset
-  /// Example: 'assets/some_url.txt'
-  void loadContent(
-    String content,{
+  void load(
+    String url, {
     Map<String, String> headers = const {},
   }) async {
-    _setContent(content);
-    
+    _setContent(url);
+    connector.loadUrl(
+        urlRequest: URLRequest(url: Uri.parse(url), headers: headers));
   }
 
   /// This function allows you to call Javascript functions defined inside the webview.
@@ -78,7 +69,6 @@ class HtmlController extends ValueNotifier<String> {
   }) {
     return connector.evaluateJavascript(source: rawJavascript);
   }
-
 
   /// Returns a Future that completes with the value true, if you can go
   /// back in the history stack.

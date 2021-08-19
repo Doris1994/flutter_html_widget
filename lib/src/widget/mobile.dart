@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../utils/utils.dart';
 import '../controller/controller.dart';
+import '../web_view_delegate.dart';
 
 /// Mobile implementation
 class WebViewXWidget extends StatefulWidget {
@@ -19,18 +20,7 @@ class WebViewXWidget extends StatefulWidget {
 
   final bool adaptHeight;
 
-  /// Callback which returns a referrence to the [WebViewXController]
-  /// being created.
-  final Function(HtmlController controller)? onWebViewCreated;
-
-  /// Callback for when the page starts loading.
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  final void Function(String src)? onPageFinished;
-
-  /// Callback for when something goes wrong in while page or resources load.
-  final void Function(WebResourceError error)? onWebResourceError;
+  final WebViewDelegate? delegate;
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -46,13 +36,10 @@ class WebViewXWidget extends StatefulWidget {
   WebViewXWidget({
     Key? key,
     required this.src,
+    this.delegate,
     this.adaptHeight = false,
     this.width,
     this.height,
-    this.onWebViewCreated,
-    this.onPageStarted,
-    this.onPageFinished,
-    this.onWebResourceError,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   }) : super(key: key);
@@ -62,36 +49,38 @@ class WebViewXWidget extends StatefulWidget {
 }
 
 class _WebViewXWidgetState extends State<WebViewXWidget> {
-  late InAppWebViewController originalWebViewController;
   late HtmlController webViewXController;
+  late WebViewDelegate? _delegate;
   double contentHeight = 0;
-  InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
-      crossPlatform: InAppWebViewOptions(
-          useShouldOverrideUrlLoading: true,
-          mediaPlaybackRequiresUserGesture: false,
-          supportZoom: false,
-          //horizontalScrollBarEnabled: false,
-          verticalScrollBarEnabled: false),
-      android: AndroidInAppWebViewOptions(
-        useHybridComposition: true,
-      ),
-      ios: IOSInAppWebViewOptions(
-        allowsInlineMediaPlayback: true,
-      ));
+  late InAppWebViewGroupOptions options;
 
   @override
   void initState() {
     super.initState();
+    _delegate = widget.delegate;
     contentHeight = widget.height ?? 100;
-    webViewXController = _createWebViewXController();
+    webViewXController = HtmlController(src: widget.src);
+    options = InAppWebViewGroupOptions(
+        crossPlatform: InAppWebViewOptions(
+            userAgent: _delegate?.customUserAgent ?? '',
+            useShouldOverrideUrlLoading: true,
+            mediaPlaybackRequiresUserGesture: false,
+            supportZoom: false,
+            //horizontalScrollBarEnabled: false,
+            verticalScrollBarEnabled: false),
+        android: AndroidInAppWebViewOptions(
+          useHybridComposition: true,
+        ),
+        ios: IOSInAppWebViewOptions(
+          allowsInlineMediaPlayback: true,
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
     final onWebViewCreated = (InAppWebViewController webViewController) {
-      originalWebViewController = webViewController;
-      webViewXController.connector = originalWebViewController;
-      widget.onWebViewCreated?.call(webViewXController);
+      webViewXController.connector = webViewController;
+      _delegate?.onWebViewCreated(webViewXController);
     };
 
     final onWebViewFinished =
@@ -105,14 +94,15 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
           // contentHeight = min(400, height);
         });
       }
-      widget.onPageFinished?.call(url.toString());
+      _delegate?.onPageFinished(url.toString());
     };
 
     return Container(
       height: contentHeight,
       child: InAppWebView(
         key: widget.key,
-        initialUrlRequest: URLRequest(url: Uri.parse(widget.src)),
+        initialUrlRequest:
+            URLRequest(url: Uri.parse(widget.src), headers: _delegate?.headers),
         onWebViewCreated: onWebViewCreated,
         initialUserScripts: UnmodifiableListView<UserScript>([]),
         initialOptions: options,
@@ -124,14 +114,24 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
               action: PermissionRequestResponseAction.GRANT);
         },
         shouldOverrideUrlLoading: (controller, navigationAction) async {
-          return NavigationActionPolicy.ALLOW;
+          Uri? uri = navigationAction.request.url;
+          debugPrint(uri.toString());
+          bool result =
+              _delegate?.shouldOverrideUrlLoading(uri.toString()) ?? true;
+          return result
+              ? NavigationActionPolicy.ALLOW
+              : NavigationActionPolicy.CANCEL;
         },
         onLoadStart: (controller, url) {
-          widget.onPageStarted?.call(url.toString());
+          _delegate?.onPageStarted(url.toString());
         },
         onLoadStop: onWebViewFinished,
+        onProgressChanged: (controller, progress) {
+          print('=================$progress======================');
+          _delegate?.onProgressChanged(progress);
+        },
         onLoadError: (controller, url, code, message) {
-          widget.onWebResourceError?.call(
+          _delegate?.onWebResourceError(
             WebResourceError(
               description: message,
               errorCode: code,
@@ -143,23 +143,8 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
     );
   }
 
-  // Creates a WebViewXController and adds the listener
-  HtmlController _createWebViewXController() {
-    return HtmlController(
-      src: widget.src,
-    )..addListener(_handleChange);
-  }
-
-  // Called when WebViewXController updates it's value
-  void _handleChange() {
-    final url = webViewXController.value;
-    originalWebViewController.loadUrl(
-        urlRequest: URLRequest(url: Uri.parse(url)));
-  }
-
   @override
   void dispose() {
-    webViewXController.removeListener(_handleChange);
     super.dispose();
   }
 }
