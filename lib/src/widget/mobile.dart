@@ -127,8 +127,11 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
         },
         onLoadStop: onWebViewFinished,
         onProgressChanged: (controller, progress) {
-          print('=================$progress======================');
+          //print('=================$progress======================');
           _delegate?.onProgressChanged(progress);
+        },
+        onTitleChanged: (controller, title) {
+          _delegate?.onTitleChanged(title ?? '');
         },
         onLoadError: (controller, url, code, message) {
           _delegate?.onWebResourceError(

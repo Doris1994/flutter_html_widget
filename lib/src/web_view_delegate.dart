@@ -8,7 +8,9 @@ class WebViewDelegate {
 
   void onPageStarted(String src) {}
 
-  void onProgressChanged(int progress){}
+  void onProgressChanged(int progress) {}
+
+  void onTitleChanged(String title) {}
 
   /// Callback for when the page has finished loading (i.e. is shown on screen).
   void onPageFinished(String src) {}
