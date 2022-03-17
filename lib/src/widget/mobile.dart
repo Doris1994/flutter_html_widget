@@ -1,6 +1,5 @@
 import 'dart:collection';
-
-import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../utils/utils.dart';
@@ -93,6 +92,12 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
           contentHeight = height;
           // contentHeight = min(400, height);
         });
+      }
+      if (Platform.isAndroid) {
+        String? title = await controller.getTitle();
+        if (title != null && title.isNotEmpty) {
+          _delegate?.onTitleChanged(title);
+        }
       }
       _delegate?.onPageFinished(url.toString());
     };
